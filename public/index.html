@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSWR - Ordem de Serviço</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- TUI Image Editor CSS -->
+    <link type="text/css" href="https://uicdn.toast.com/tui-color-picker/v2.2.7/tui-color-picker.css" rel="stylesheet">
+    <link type="text/css" href="https://uicdn.toast.com/tui-image-editor/v3.15.3/tui-image-editor.css" rel="stylesheet">
+    
+    <!-- SimpleLightbox CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simple-lightbox/2.14.2/simple-lightbox.min.css" />
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .pre-auth-hide { display: none; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .modal-enter-active { transition: opacity 300ms, transform 300ms; }
+        .modal-exit-active { transition: opacity 300ms, transform 300ms; }
+        .modal-enter, .modal-exit-active { opacity: 0; transform: scale(0.95); }
+        .modal-exit, .modal-enter-active { opacity: 1; transform: scale(1); }
+        .image-preview-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .image-preview-box { position: relative; width: 80px; height: 80px; }
+        .image-preview-img { width: 100%; height: 100%; object-fit: cover; border-radius: 0.5rem; border: 2px solid #e5e7eb; }
+        .remove-image-btn, .edit-image-btn { position: absolute; width: 20px; height: 20px; background-color: rgba(0, 0, 0, 0.7); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; cursor: pointer; border: 1px solid white; }
+        .remove-image-btn { top: -5px; right: -5px; }
+        .edit-image-btn { bottom: -5px; right: -5px; font-size: 10px; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #image-editor-modal .tui-image-editor-container { height: calc(90vh - 100px); }
+
+        /* Estilos de impressão */
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                font-family: 'Inter', sans-serif;
+                color: #000;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            .print-header {
+                text-align: center;
+                margin-bottom: 15px; /* Reduzido */
+            }
+            .print-header h1 {
+                font-size: 24px;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            .print-header p {
+                font-size: 12px; /* Reduzido */
+                color: #555;
+            }
+            .print-section-title {
+                font-size: 15px; /* Reduzido */
+                font-weight: bold;
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 4px; /* Reduzido */
+                margin-top: 15px; /* Reduzido */
+                margin-bottom: 8px; /* Reduzido */
+            }
+            .print-info-item {
+                font-size: 13px; /* Reduzido */
+                line-height: 1.4; /* Ajustado */
+                margin-bottom: 3px; /* Reduzido */
+            }
+            .print-info-item strong {
+                font-weight: 600;
+            }
+            .print-text-area {
+                border: 1px solid #ddd;
+                padding: 8px; /* Reduzido */
+                min-height: 40px; /* Reduzido */
+                margin-top: 4px; /* Reduzido */
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                font-size: 13px; /* Reduzido */
+            }
+            .print-checklist-item {
+                font-size: 13px; /* Reduzido */
+                margin-bottom: 2px; /* Reduzido */
+            }
+            /* Removendo estilos de imagem para impressão, conforme solicitado */
+            .print-image-gallery {
+                display: none; /* Oculta a seção de imagens na impressão */
+            }
+            .print-total {
+                font-size: 17px; /* Reduzido */
+                font-weight: bold;
+                text-align: right;
+                margin-top: 15px; /* Reduzido */
+                border-top: 1px solid #ccc; /* Reduzido */
+                padding-top: 8px; /* Reduzido */
+            }
+            .print-terms {
+                margin-top: 25px; /* Reduzido */
+                border-top: 1px solid #ddd;
+                padding-top: 10px; /* Reduzido */
+            }
+            .print-terms h4 {
+                font-size: 13px; /* Reduzido */
+                font-weight: bold;
+                margin-top: 10px; /* Reduzido */
+                margin-bottom: 4px; /* Reduzido */
+            }
+            .print-terms p {
+                font-size: 11px; /* Reduzido */
+                line-height: 1.5; /* Ajustado */
+                text-align: justify;
+                margin-bottom: 8px; /* Reduzido */
+            }
+            .print-signature-area {
+                margin-top: 60px; /* Mais espaço para a assinatura */
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding-top: 40px; /* Ajusta o padding para mais espaço */
+            }
+            .print-signature-line {
+                border-bottom: 1px dashed #000;
+                width: 75%; /* Ajustado para mais espaço */
+                margin: 0 auto 5px auto;
+                height: 1px;
+            }
+            .print-signature-text {
+                font-size: 11px; /* Reduzido */
+            }
+            .print-digital-signature-img {
+                max-width: 200px; /* Tamanho da imagem da assinatura digital */
+                height: auto;
+                margin-top: 10px;
+                border: 1px solid #ccc;
+            }
+            .print-footer-message {
+                text-align: center;
+                margin-top: 20px; /* Reduzido */
+                font-size: 9px; /* Reduzido */
+                color: #777;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Login Container -->
+    <div id="login-container" class="flex items-center justify-center min-h-screen pre-auth-hide">
+        <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+            <h1 class="text-3xl font-bold text-center mb-2 tracking-tighter"><span style="color: #22c55e;">WS</span><span style="color: #ef4444;">WR</span></h1>
+            <p class="text-center text-gray-600 mb-6">Acesse seu sistema</p>
+            <form id="login-form">
+                <div class="mb-4"><label for="email" class="block text-sm font-medium text-gray-600 mb-1">Email</label><input type="email" id="email" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></div>
+                <div class="mb-6"><label for="password" class="block text-sm font-medium text-gray-600 mb-1">Senha</label><input type="password" id="password" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></div>
+                <button type="submit" id="login-button" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="hidden container mx-auto p-4 md:p-6 lg:p-8">
+        <header class="mb-8 flex justify-between items-center">
+            <div class="text-left"><h1 class="text-4xl md:text-5xl font-bold text-gray-800 tracking-tighter"><span style="color: #22c55e;">WS</span><span style="color: #ef4444;">WR</span></h1><p class="text-xl text-gray-600 mt-1">Sistema de Ordem de Serviço</p></div>
+            <button id="logout-button" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600">Sair</button>
+        </header>
+
+        <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto"> <!-- Novo wrapper para botões -->
+                <button id="add-os-button" class="w-full md:w-auto bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300">+ Adicionar Nova OS</button>
+                <button id="view-dashboard-button" class="w-full md:w-auto bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300">Ver Gráficos</button>
+            </div>
+            <div class="relative w-full md:w-1/3"><input type="text" id="search-input" placeholder="Buscar por cliente, OS ou equipamento..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><svg class="w-5 h-5 text-gray-400 absolute top-1/2 left-3 transform -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div>
+        </div>
+
+        <main id="os-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></main>
+        <div id="loading-indicator" class="text-center p-10"><p class="text-gray-500">Carregando ordens de serviço...</p></div>
+        <div id="empty-state" class="hidden text-center p-10 bg-white rounded-lg shadow-md"><svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg><h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma Ordem de Serviço</h3><p class="mt-1 text-sm text-gray-500">Comece adicionando uma nova OS.</p></div>
+    </div>
+
+    <!-- Modal for Adding/Editing OS -->
+    <div id="os-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div id="modal-content" class="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 md:p-8">
+            <div class="flex justify-between items-center mb-6"><h2 id="modal-title" class="text-2xl font-bold text-gray-800">Adicionar Nova Ordem de Serviço</h2><button id="close-modal-button" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button></div>
+            <form id="os-form">
+                <input type="hidden" id="os-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    <div class="md:col-span-2"><h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Informações do Cliente</h3></div>
+                    <div><label for="client-name" class="block text-sm font-medium text-gray-600 mb-1">Nome Completo</label><input type="text" id="client-name" class="w-full p-2 border rounded-lg" required></div>
+                    <div><label for="client-cpf" class="block text-sm font-medium text-gray-600 mb-1">CPF</label><input type="text" id="client-cpf" class="w-full p-2 border rounded-lg"></div>
+                    <div class="md:col-span-2"><label for="client-contact" class="block text-sm font-medium text-gray-600 mb-1">Contato (Telefone/Email)</label><input type="text" id="client-contact" class="w-full p-2 border rounded-lg" required></div>
+                    <div class="md:col-span-2 mt-4"><h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Informações do Equipamento</h3></div>
+                    <div><label for="device-type" class="block text-sm font-medium text-gray-600 mb-1">Tipo</label><select id="device-type" class="w-full p-2 border rounded-lg bg-white"><option value="">-- Selecione --</option><option>Celular</option><option>Notebook</option><option>Computador (Desktop)</option><option>Tablet</option><option>Outro</option></select></div>
+                    <div><label for="device-brand" class="block text-sm font-medium text-gray-600 mb-1">Marca / Modelo</label><input type="text" id="device-brand" class="w-full p-2 border rounded-lg" required></div>
+                    <div><label for="equipment-serial-imei" class="block text-sm font-medium text-gray-600 mb-1">N° de Série / IMEI</label><input type="text" id="equipment-serial-imei" class="w-full p-2 border rounded-lg"></div>
+                    <div><label for="equipment-password" class="block text-sm font-medium text-gray-600 mb-1">Senha / Padrão</label><input type="text" id="equipment-password" class="w-full p-2 border rounded-lg"></div>
+                    <div id="checklist-container" class="md:col-span-2 mt-2"></div>
+                    <div class="md:col-span-2"><label for="accessories-received" class="block text-sm font-medium text-gray-600 mb-1">Acessórios</label><textarea id="accessories-received" rows="2" class="w-full p-2 border rounded-lg" placeholder="Ex: Carregador, cabo, capa..."></textarea></div>
+                    <div class="md:col-span-2"><label for="reported-issue" class="block text-sm font-medium text-gray-600 mb-1">Defeito Reclamado</label><textarea id="reported-issue" rows="3" class="w-full p-2 border rounded-lg" required></textarea></div>
+                    <div class="md:col-span-2 mt-4"><h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Laudo Técnico</h3></div>
+                    <div class="md:col-span-2"><label for="tech-findings" class="block text-sm font-medium text-gray-600 mb-1">Constatações</label><textarea id="tech-findings" rows="3" class="w-full p-2 border rounded-lg"></textarea></div>
+                    <div class="md:col-span-2"><label for="tech-solution" class="block text-sm font-medium text-gray-600 mb-1">Solução</label><textarea id="tech-solution" rows="3" class="w-full p-2 border rounded-lg"></textarea></div>
+                    <div class="md:col-span-2 mt-4"><h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Imagens do Equipamento</h3></div>
+                    <div class="md:col-span-2"><div id="image-preview" class="mb-2 flex flex-wrap gap-4 min-h-[120px] bg-gray-50 p-2 rounded-lg border-dashed border-2"></div><label for="image-upload-input" class="cursor-pointer bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Adicionar Imagens...</label><input type="file" id="image-upload-input" multiple accept="image/*" class="hidden"></div>
+                    <div class="md:col-span-2 mt-4"><h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Orçamento</h3></div>
+                    <div><label for="budget-parts" class="block text-sm font-medium text-gray-600 mb-1">Valor Peças (R$)</label><input type="number" id="budget-parts" step="0.01" placeholder="0.00" class="w-full p-2 border rounded-lg"></div>
+                    <div><label for="budget-labor" class="block text-sm font-medium text-gray-600 mb-1">Valor Serviço (R$)</label><input type="number" id="budget-labor" step="0.01" placeholder="0.00" class="w-full p-2 border rounded-lg"></div>
+                    <div class="md:col-span-2">
+                        <label for="budget-total" class="block text-sm font-medium text-gray-600 mb-1">Valor Total (R$)</label>
+                        <input type="text" id="budget-total" class="w-full p-2 border rounded-lg bg-gray-100 font-bold" readonly>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="labor-percentage" class="block text-sm font-medium text-gray-600 mb-1">Mão de Obra % sobre Peças</label>
+                        <input type="text" id="labor-percentage" class="w-full p-2 border rounded-lg bg-gray-100 font-bold" readonly>
+                    </div>
+                    <div class="md:col-span-2 mt-4"><h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Detalhes do Serviço</h3></div>
+                    <div><label for="technician" class="block text-sm font-medium text-gray-600 mb-1">Técnico Responsável</label><select id="technician" class="w-full p-2 border rounded-lg bg-white" required><option>Weslley</option><option>Werlley</option></select></div>
+                    <div><label for="status" class="block text-sm font-medium text-gray-600 mb-1">Status da OS</label><select id="status" class="w-full p-2 border rounded-lg bg-white"><option>Aguardando Diagnóstico</option><option>Aguardando Orçamento</option><option>Aguardando Aprovação</option><option>Aguardando Peça</option><option>Em Reparo</option><option>Aguardando Retirada</option><option>Finalizado</option><option>Cancelado</option></select></div>
+                </div>
+                <div class="mt-8 flex justify-end gap-4">
+                    <button type="button" id="add-signature-button" class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700">Adicionar Assinatura Digital</button>
+                    <button type="button" id="cancel-button" class="bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg hover:bg-gray-400">Cancelar</button>
+                    <button type="submit" id="save-button" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 flex items-center">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal for Image Editor -->
+    <div id="image-editor-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[60]">
+        <div class="bg-gray-800 rounded-lg shadow-2xl w-[95vw] max-w-[1200px] h-[90vh] flex flex-col p-4">
+            <div id="tui-image-editor" class="flex-grow"></div>
+            <div class="flex justify-end gap-4 mt-4">
+                 <button id="editor-cancel-button" class="bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-600">Cancelar</button>
+                 <button id="editor-save-button" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Digital Signature -->
+    <div id="signature-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 md:p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Assinatura Digital</h2>
+                <button id="close-signature-modal-button" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="border border-gray-300 rounded-lg overflow-hidden">
+                <canvas id="signature-pad" class="w-full h-48 bg-gray-50 cursor-crosshair"></canvas>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="clear-signature-button" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600">Limpar</button>
+                <button id="save-signature-button" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700">Salvar Assinatura</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Dashboard -->
+    <div id="dashboard-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 md:p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard Financeiro</h2>
+                <button id="close-dashboard-modal-button" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Visão Geral dos Custos e Lucros</h3>
+                <div class="flex gap-4 mb-4">
+                    <select id="month-select" class="p-2 border rounded-lg">
+                        <option value="0">Janeiro</option>
+                        <option value="1">Fevereiro</option>
+                        <option value="2">Março</option>
+                        <option value="3">Abril</option>
+                        <option value="4">Maio</option>
+                        <option value="5">Junho</option>
+                        <option value="6">Julho</option>
+                        <option value="7">Agosto</option>
+                        <option value="8">Setembro</option>
+                        <option value="9">Outubro</option>
+                        <option value="10">Novembro</option>
+                        <option value="11">Dezembro</option>
+                    </select>
+                    <select id="year-select" class="p-2 border rounded-lg">
+                        <!-- Anos serão preenchidos via JS -->
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-sm font-medium text-blue-700">Total Peças</p>
+                        <p id="total-parts-cost" class="text-2xl font-bold text-blue-900">R$ 0,00</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-sm font-medium text-purple-700">Total Mão de Obra</p>
+                        <p id="total-labor-cost" class="text-2xl font-bold text-purple-900">R$ 0,00</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-sm font-medium text-green-700">Receita Total</p>
+                        <p id="total-revenue" class="text-2xl font-bold text-green-900">R$ 0,00</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-sm font-medium text-yellow-700">Lucro Estimado</p>
+                        <p id="total-profit" class="text-2xl font-bold text-yellow-900">R$ 0,00</p>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-lg shadow-sm md:col-span-2 lg:col-span-2">
+                        <p class="text-sm font-medium text-indigo-700">Total OS Concluídas</p>
+                        <p id="total-os-completed" class="text-2xl font-bold text-indigo-900">0</p>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">OS Concluídas por Técnico</h3>
+                    <div id="technician-os-counts" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Contagens por técnico serão preenchidas via JS -->
+                    </div>
+                </div>
+                <canvas id="financial-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="message-box" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-3 px-5 rounded-lg shadow-xl transition-transform transform translate-y-20 z-[95]">
+        <p id="message-text"></p>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[100]">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 id="confirm-title" class="text-lg font-bold text-gray-900 mb-4">Confirmar Exclusão</h3>
+            <p id="confirm-text" class="text-sm text-gray-600 mb-6">Tem certeza que deseja excluir esta Ordem de Serviço? Esta ação não pode ser desfeita.</p>
+            <div class="flex justify-end gap-4">
+                <button id="confirm-cancel-btn" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
+                <button id="confirm-ok-btn" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TUI Image Editor JS -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.2.0/fabric.min.js"></script>
+    <script type="text/javascript" src="https://uicdn.toast.com/tui.code-snippet/v1.5.2/tui-code-snippet.min.js"></script>
+    <script type="text/javascript" src="https://uicdn.toast.com/tui-color-picker/v2.2.7/tui-color-picker.min.js"></script>
+    <script type="text/javascript" src="https://uicdn.toast.com/tui-image-editor/v3.15.3/tui-image-editor.min.js"></script>
+    
+    <!-- SimpleLightbox JS - Moved here to ensure it loads before the module script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-lightbox/2.14.2/simple-lightbox.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const IMGBB_API_KEY = "d39bfdd2e0d47988ef0638d8ba8ec123";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3Fpdws3VuKfTsRXEvk2bY-Hy7PnGcTPw",
+            authDomain: "wswr-50f13.firebaseapp.com",
+            projectId: "wswr-50f13",
+            storageBucket: "wswr-50f13.appspot.com",
+            messagingSenderId: "308159601730",
+            appId: "1:308159601730:web:4ae53b1fe14d46c31e21db",
+            measurementId: "G-KET49G1YBF"
+        };
+        
+        const appId = 'default-os-app';
+        let app, auth, db, userId;
+        let serviceOrders = [];
+        let unsubscribe;
+        let newFilesToUpload = [];
+        let existingImages = [];
+        let imageEditorInstance = null;
+        let lightbox = null; // Variável para controlar a instância da galeria
+        let osToDeleteId = null; // Variável para guardar o ID da OS a ser excluída
+        let currentSignatureData = null; // Variável para armazenar a assinatura digital
+        let financialChartInstance = null; // Instância do gráfico Chart.js
+
+       // Company Information (Can be configured or fetched from a global store)
+        const companyInfo = {
+            name: "WSWR Assistência Técnica",
+            cnpj: "62.205.283/0001-65", 
+            address: "Rua João Mantovani, 459, Bairro: Santa Cruz",
+            phone: "19-97118-9205",
+            email: "weslleytsu@gmail.com"
+        };
+
+        // UI Elements
+        const loginContainer = document.getElementById('login-container');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+        const osListContainer = document.getElementById('os-list-container');
+        const modal = document.getElementById('os-modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalTitle = document.getElementById('modal-title');
+        const osForm = document.getElementById('os-form');
+        const saveButton = document.getElementById('save-button');
+        const addOsButton = document.getElementById('add-os-button');
+        const closeModalButton = document.getElementById('close-modal-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const searchInput = document.getElementById('search-input');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const emptyState = document.getElementById('empty-state');
+        const deviceTypeSelect = document.getElementById('device-type');
+        const checklistContainer = document.getElementById('checklist-container');
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const imagePreviewContainer = document.getElementById('image-preview');
+        const budgetPartsInput = document.getElementById('budget-parts');
+        const budgetLaborInput = document.getElementById('budget-labor');
+        const budgetTotalInput = document.getElementById('budget-total');
+        const laborPercentageInput = document.getElementById('labor-percentage'); // Novo elemento
+        const imageEditorModal = document.getElementById('image-editor-modal');
+        const editorSaveButton = document.getElementById('editor-save-button');
+        const editorCancelButton = document.getElementById('editor-cancel-button');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmOkButton = document.getElementById('confirm-ok-btn');
+        const confirmCancelButton = document.getElementById('confirm-cancel-btn');
+
+        // Digital Signature Elements
+        const signatureModal = document.getElementById('signature-modal');
+        const signaturePadCanvas = document.getElementById('signature-pad');
+        const signaturePadCtx = signaturePadCanvas.getContext('2d');
+        const clearSignatureButton = document.getElementById('clear-signature-button');
+        const saveSignatureButton = document.getElementById('save-signature-button');
+        const closeSignatureModalButton = document.getElementById('close-signature-modal-button');
+        const addSignatureButton = document.getElementById('add-signature-button');
+
+        // Dashboard Elements
+        const viewDashboardButton = document.getElementById('view-dashboard-button');
+        const dashboardModal = document.getElementById('dashboard-modal');
+        const closeDashboardModalButton = document.getElementById('close-dashboard-modal-button');
+        const financialChartCanvas = document.getElementById('financial-chart');
+        const totalPartsCostDisplay = document.getElementById('total-parts-cost');
+        const totalLaborCostDisplay = document.getElementById('total-labor-cost');
+        const totalRevenueDisplay = document.getElementById('total-revenue');
+        const totalProfitDisplay = document.getElementById('total-profit');
+        const totalOsCompletedDisplay = document.getElementById('total-os-completed');
+        const technicianOsCountsDisplay = document.getElementById('technician-os-counts');
+        const monthSelect = document.getElementById('month-select');
+        const yearSelect = document.getElementById('year-select');
+
+
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Data Definitions
+        const statusColors = { 'Aguardando Diagnóstico': 'bg-gray-100 text-gray-800 border-gray-400', 'Aguardando Orçamento': 'bg-yellow-100 text-yellow-800 border-yellow-400', 'Aguardando Aprovação': 'bg-orange-100 text-orange-800 border-orange-400', 'Aguardando Peça': 'bg-purple-100 text-purple-800 border-purple-400', 'Em Reparo': 'bg-blue-100 text-blue-800 border-blue-400', 'Aguardando Retirada': 'bg-teal-100 text-teal-800 border-teal-400', 'Finalizado': 'bg-green-100 text-green-800 border-green-400', 'Cancelado': 'bg-red-100 text-red-800 border-red-400' };
+        const checklistData = { 'Celular': ['Tela (trincada/riscada)', 'Bateria (viciada/não carrega)', 'Câmeras (frontal/traseira)', 'Botões (volume/power)', 'Conector de Carga', 'Áudio (auricular/alto-falante)', 'Carcaça (arranhada/amassada)'], 'Notebook': ['Tela (manchas/pixels mortos)', 'Teclado (falhando/faltando teclas)', 'Touchpad', 'Bateria (duração)', 'Fonte/Carregador', 'Portas (USB/HDMI)', 'Sistema Operacional (lento/travando)', 'Dobradiças'], 'Computador (Desktop)': ['Não liga', 'Bips ao ligar', 'Sistema (lento/travando)', 'Portas USB', 'Vídeo (não dá imagem)', 'Fonte de Alimentação', 'Limpeza interna'], 'Tablet': ['Tela (trincada/touch falhando)', 'Bateria', 'Conector de Carga', 'Botões', 'Wi-Fi/Rede'] };
+        const portugueseLocale = { Crop: 'Cortar', Draw: 'Desenhar', Shape: 'Forma', Text: 'Texto', Rectangle: 'Retângulo', Circle: 'Círculo', Triangle: 'Triângulo', Fill: 'Preenchimento', Stroke: 'Contorno', Color: 'Cor', Width: 'Largura', Free: 'Livre', Straight: 'Reta', 'Arrow': 'Seta', Apply: 'Aplicar', Cancel: 'Cancelar', Bold: 'Negrito', Italic: 'Itálico', Underline: 'Sublinhado', Left: 'Esquerda', Center: 'Centro', Right: 'Direita', 'Load': 'Carregar', 'Download': 'Baixar', 'Undo': 'Desfazer', 'Redo': 'Refazer', 'Reset': 'Resetar' };
+        const editorTheme = { 'common.bi.image': '','common.backgroundColor': '#2a2a2a','common.border': '1px solid #444','header.backgroundColor': '#333','header.color': '#fff','loadButton.backgroundColor': '#444','loadButton.color': '#fff','downloadButton.backgroundColor': '#00a9ff','downloadButton.color': '#fff','menu.backgroundColor': '#333','menu.activeIcon.color': '#55a9ff','menu.icon.color': '#bbb','submenu.backgroundColor': '#444','submenu.partition.color': '#555','submenu.label.color': '#fff','submenu.label.active.color': '#55a9ff','submenu.icon.color': '#fff','submenu.icon.active.color': '#55a9ff','checkbox.border': '1px solid #fff','checkbox.backgroundColor': '#fff', };
+
+        // --- App Initialization ---
+        function initialize() { 
+            try { 
+                app = initializeApp(firebaseConfig); 
+                db = getFirestore(app); 
+                auth = getAuth(app); 
+                onAuthStateChanged(auth, (user) => { 
+                    if (user) { 
+                        userId = user.uid; 
+                        loginContainer.classList.add('hidden'); 
+                        appContainer.classList.remove('hidden'); 
+                        setupFirestoreListener(); 
+                        populateMonthYearSelectors(); // Populate selectors on auth
+                    } else { 
+                        userId = null; 
+                        if (unsubscribe) unsubscribe(); 
+                        osListContainer.innerHTML = ''; 
+                        loginContainer.classList.remove('pre-auth-hide'); 
+                        loginContainer.classList.remove('hidden'); 
+                        appContainer.classList.add('hidden'); 
+                    } 
+                }); 
+            } catch (error) { 
+                console.error("Firebase initialization failed:", error); 
+                showMessage("Erro fatal ao iniciar.", "error"); 
+            } 
+        }
+        
+        // --- Auth functions ---
+        async function handleLogin(e) { 
+            e.preventDefault(); 
+            const email = document.getElementById('email').value; 
+            const password = document.getElementById('password').value; 
+            try { 
+                await signInWithEmailAndPassword(auth, email, password); 
+            } catch (error) { 
+                console.error("Login failed:", error); 
+                showMessage(getFriendlyAuthError(error), "error"); 
+            } 
+        }
+        async function handleLogout() { 
+            try { 
+                await signOut(auth); 
+            } catch (error) { 
+                console.error("Logout failed:", error); 
+                showMessage("Erro ao sair.", "error"); 
+            } 
+        }
+        function getFriendlyAuthError(error) { 
+            switch (error.code) { 
+                case 'auth/user-not-found': 
+                case 'auth/wrong-password': 
+                case 'auth/invalid-credential': 
+                    return 'E-mail ou senha inválidos.'; 
+                case 'auth/invalid-email': 
+                    return 'O e-mail fornecido não é válido.'; 
+                default: 
+                    return 'Ocorreu um erro de autenticação.'; 
+            } 
+        }
+
+        // --- Firestore Listener ---
+        async function setupFirestoreListener() { 
+            if (unsubscribe) unsubscribe(); 
+            if (!userId) return; 
+            const osCollectionPath = `artifacts/${appId}/users/${userId}/service_orders`; 
+            const q = query(collection(db, osCollectionPath)); 
+            unsubscribe = onSnapshot(q, (querySnapshot) => { 
+                loadingIndicator.style.display = 'none'; 
+                serviceOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+                serviceOrders.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0)); 
+                renderOsList(); 
+                renderDashboard(); // Render dashboard when service orders are updated
+            }, (error) => { 
+                console.error("Error fetching data: ", error); 
+                showMessage("Erro ao buscar dados.", "error"); 
+            }); 
+        }
+
+        // --- Rendering Logic ---
+        function renderOsList(filter = '') {
+            if (lightbox) {
+                lightbox.destroy();
+            }
+
+            osListContainer.innerHTML = '';
+            const lowercasedFilter = filter.toLowerCase();
+            const filteredOrders = serviceOrders.filter(os => os.clientName?.toLowerCase().includes(lowercasedFilter) || os.osNumber?.toString().includes(lowercasedFilter) || os.deviceBrand?.toLowerCase().includes(lowercasedFilter));
+            
+            emptyState.classList.toggle('hidden', filteredOrders.length > 0);
+
+            filteredOrders.forEach(os => {
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-lg shadow-md p-5 border-l-4 transition-transform transform hover:scale-105 ${statusColors[os.status] || 'border-gray-400'}`;
+                card.dataset.id = os.id;
+                const formattedDate = os.createdAt ? os.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
+                
+                let galleryHtml = '';
+                if (os.images && os.images.length > 0) {
+                    galleryHtml += '<p class="text-sm font-medium text-gray-700 mt-4 mb-2">Imagens:</p>';
+                    galleryHtml += `<div class="gallery flex flex-wrap gap-2">`;
+                    galleryHtml += os.images.map(image => `
+                        <a href="${image.url}" title="${image.caption || ''}">
+                            <img src="${image.url}" alt="${image.caption || 'Imagem do equipamento'}" class="w-16 h-16 object-cover rounded-md border-2 border-gray-200 hover:border-blue-500 transition-all">
+                        </a>
+                    `).join('');
+                    galleryHtml += `</div>`;
+                }
+
+                const total = (parseFloat(os.budgetParts) || 0) + (parseFloat(os.budgetLabor) || 0);
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-lg text-gray-800 truncate pr-2">${os.clientName}</h3>
+                        <span class="text-sm font-semibold px-2 py-1 rounded-full ${statusColors[os.status] || 'bg-gray-100 text-gray-800'}">${os.status}</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-2">OS: #${os.osNumber}</p>
+                    <div class="mt-4 space-y-2 text-sm">
+                        <p><strong class="font-medium">Equipamento:</strong> ${os.deviceType} - ${os.deviceBrand}</p>
+                        <p><strong class="font-medium">Defeito:</strong> ${os.reportedIssue}</p>
+                        <p><strong class="font-medium">Total:</strong> R$ ${total.toFixed(2).replace('.', ',')}</p>
+                        <p><strong class="font-medium">Técnico:</strong> ${os.technician || 'N/A'}</p>
+                    </div>
+                    ${galleryHtml} 
+                    <div class="mt-4 pt-3 border-t flex justify-between items-center text-xs text-gray-500">
+                        <span>Entrada: ${formattedDate}</span>
+                        <div class="flex items-center gap-2">
+                            <button class="print-btn text-gray-600 hover:text-gray-900 font-semibold">Imprimir</button>
+                            <button class="edit-btn text-blue-600 hover:text-blue-800 font-semibold">Editar</button>
+                            <button class="delete-btn text-red-600 hover:text-red-800 font-semibold">Excluir</button>
+                        </div>
+                    </div>`;
+                osListContainer.appendChild(card);
+            });
+
+            if (filteredOrders.length > 0 && typeof SimpleLightbox !== 'undefined') {
+               lightbox = new SimpleLightbox('.gallery a');
+            }
+        }
+
+        // --- Image Handling ---
+        function handleFileSelect(event) { 
+            const files = Array.from(event.target.files); 
+            files.forEach(file => { 
+                if (!file.type.startsWith('image/')) return; 
+                newFilesToUpload.push(file); 
+                createImagePreview(URL.createObjectURL(file), file.name, 'new'); 
+            }); 
+            event.target.value = ''; 
+        }
+        function createImagePreview(src, identifier, type, caption = '') {
+            const previewWrapper = document.createElement('div');
+            previewWrapper.className = 'image-preview-item';
+            previewWrapper.dataset.identifier = identifier;
+            previewWrapper.innerHTML = `<div class="image-preview-box"><img src="${src}" class="image-preview-img"><div class="remove-image-btn">&times;</div><div class="edit-image-btn">✏️</div></div><input type="text" class="image-caption-input w-full text-xs border rounded p-1 mt-1" placeholder="Legenda..." value="${caption}">`;
+            previewWrapper.querySelector('.remove-image-btn').addEventListener('click', () => removeImage(identifier, type));
+            previewWrapper.querySelector('.edit-image-btn').addEventListener('click', () => openImageEditor(identifier, type, src));
+            imagePreviewContainer.appendChild(previewWrapper);
+        }
+        function removeImage(identifier, type) { 
+            const previewItem = imagePreviewContainer.querySelector(`[data-identifier="${identifier}"]`); 
+            if (previewItem) previewItem.remove(); 
+            else if (type === 'existing') existingImages = existingImages.filter(img => img.url !== identifier); 
+        }
+        
+        // --- Image Editor Functions ---
+        function dataURLtoFile(dataurl, filename) { 
+            let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n); 
+            while(n--){ u8arr[n] = bstr.charCodeAt(n); } 
+            return new File([u8arr], filename, {type:mime}); 
+        }
+        function openImageEditor(identifier, type, src) {
+            imageEditorModal.classList.remove('hidden');
+            if (imageEditorInstance) imageEditorInstance.destroy();
+            imageEditorInstance = new tui.ImageEditor('#tui-image-editor', { includeUI: { loadImage: { path: src, name: identifier }, locale: portugueseLocale, theme: editorTheme, menu: ['draw', 'shape', 'text'], initMenu: 'draw', uiSize: { width: '100%', height: '100%' }, menuBarPosition: 'bottom' }, selectionStyle: { cornerSize: 20, rotatingPointOffset: 70 } });
+            editorSaveButton.onclick = () => {
+                const dataURL = imageEditorInstance.toDataURL();
+                const editedFile = dataURLtoFile(dataURL, identifier);
+                const previewItem = imagePreviewContainer.querySelector(`[data-identifier="${identifier}"]`);
+                const previewImg = previewItem.querySelector('img');
+                if (type === 'new') {
+                    const fileIndex = newFilesToUpload.findIndex(f => f.name === identifier);
+                    if (fileIndex > -1) newFilesToUpload[fileIndex] = editedFile;
+                } else {
+                    const imgIndex = existingImages.findIndex(img => img.url === identifier);
+                    if(imgIndex > -1) existingImages[imgIndex].editedFile = editedFile;
+                }
+                previewImg.src = dataURL;
+                closeImageEditor();
+            };
+        }
+        function closeImageEditor() { 
+            if (imageEditorInstance) imageEditorInstance.destroy(); 
+            imageEditorInstance = null; 
+            imageEditorModal.classList.add('hidden'); 
+        }
+
+        // --- Digital Signature Functions ---
+        function openSignatureModal(existingSignature = null) {
+            signatureModal.classList.remove('hidden');
+            // Ensure canvas is ready for drawing
+            const rect = signaturePadCanvas.getBoundingClientRect();
+            signaturePadCanvas.width = rect.width;
+            signaturePadCanvas.height = rect.height;
+            signaturePadCtx.clearRect(0, 0, signaturePadCanvas.width, signaturePadCanvas.height);
+            signaturePadCtx.lineWidth = 2;
+            signaturePadCtx.lineCap = 'round';
+            signaturePadCtx.strokeStyle = 'black';
+
+            if (existingSignature) {
+                const img = new Image();
+                img.onload = () => {
+                    signaturePadCtx.drawImage(img, 0, 0, signaturePadCanvas.width, signaturePadCanvas.height);
+                };
+                img.src = existingSignature;
+            }
+        }
+
+        function closeSignatureModal() {
+            signatureModal.classList.add('hidden');
+        }
+
+        function clearSignature() {
+            signaturePadCtx.clearRect(0, 0, signaturePadCanvas.width, signaturePadCanvas.height);
+            currentSignatureData = null; // Clear stored signature data
+        }
+
+        function saveDigitalSignature() {
+            if (signaturePadCanvas.toDataURL() === signaturePadCanvas.toDataURL('image/png').replace(/[^]/g, '')) { // Check if canvas is empty
+                showMessage("Assinatura vazia. Desenhe sua assinatura antes de salvar.", "error");
+                return;
+            }
+            currentSignatureData = signaturePadCanvas.toDataURL('image/png');
+            showMessage("Assinatura digital salva!", "success");
+            closeSignatureModal();
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = getCanvasCoordinates(e);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); // Prevent scrolling on touch devices
+            const [x, y] = getCanvasCoordinates(e);
+            signaturePadCtx.beginPath();
+            signaturePadCtx.moveTo(lastX, lastY);
+            signaturePadCtx.lineTo(x, y);
+            signaturePadCtx.stroke();
+            [lastX, lastY] = [x, y];
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function getCanvasCoordinates(e) {
+            const rect = signaturePadCanvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return [clientX - rect.left, clientY - rect.top];
+        }
+
+        // --- Modal Handling ---
+        function openModal(os = null) {
+            osForm.reset();
+            checklistContainer.innerHTML = '';
+            imagePreviewContainer.innerHTML = '';
+            newFilesToUpload = [];
+            existingImages = [];
+            currentSignatureData = null; // Reset signature data on modal open
+            if (os) {
+                modalTitle.textContent = `Editar OS #${os.osNumber}`;
+                document.getElementById('os-id').value = os.id;
+                document.getElementById('client-name').value = os.clientName || ''; document.getElementById('client-cpf').value = os.clientCpf || ''; document.getElementById('client-contact').value = os.clientContact || ''; document.getElementById('device-type').value = os.deviceType || ''; document.getElementById('device-brand').value = os.deviceBrand || ''; document.getElementById('equipment-serial-imei').value = os.equipmentSerialImei || ''; document.getElementById('equipment-password').value = os.equipmentPassword || ''; document.getElementById('accessories-received').value = os.accessoriesReceived || ''; document.getElementById('reported-issue').value = os.reportedIssue || ''; document.getElementById('tech-findings').value = os.techFindings || ''; document.getElementById('tech-solution').value = os.techSolution || ''; document.getElementById('budget-parts').value = os.budgetParts || ''; document.getElementById('budget-labor').value = os.budgetLabor || ''; document.getElementById('technician').value = os.technician || 'Weslley'; document.getElementById('status').value = os.status || 'Aguardando Diagnóstico';
+                if (os.deviceType) generateChecklist(os.deviceType, os.checklist);
+                if (os.images) { existingImages = JSON.parse(JSON.stringify(os.images)); existingImages.forEach(img => createImagePreview(img.url, img.url, 'existing', img.caption)); }
+                if (os.digitalSignature) { currentSignatureData = os.digitalSignature; } // Load existing signature
+            } else {
+                modalTitle.textContent = 'Adicionar Nova Ordem de Serviço';
+                document.getElementById('os-id').value = '';
+                document.getElementById('status').value = 'Aguardando Diagnóstico';
+            }
+            updateTotalBudget();
+            modal.classList.remove('hidden');
+            setTimeout(() => modalContent.classList.add('modal-enter-active'), 10);
+        }
+        function closeModal() { modalContent.classList.remove('modal-enter-active'); modalContent.classList.add('modal-exit-active'); setTimeout(() => { modal.classList.add('hidden'); modalContent.classList.remove('modal-exit-active'); }, 300); }
+        function updateTotalBudget() { 
+            const parts = parseFloat(budgetPartsInput.value) || 0; 
+            const labor = parseFloat(budgetLaborInput.value) || 0; 
+            const total = parts + labor; 
+            budgetTotalInput.value = `R$ ${total.toFixed(2).replace('.', ',')}`; 
+
+            // Calculate labor percentage over parts
+            let laborPercentage = 0;
+            if (parts > 0) {
+                laborPercentage = (labor / parts) * 100;
+            }
+            laborPercentageInput.value = `${laborPercentage.toFixed(2).replace('.', ',')}%`;
+        }
+        function generateChecklist(type, savedChecklist = {}) { 
+            checklistContainer.innerHTML = ''; 
+            const items = checklistData[type]; 
+            if (!items) return; 
+
+            const title = document.createElement('h4'); 
+            title.className = 'text-md font-semibold text-gray-600 mb-2 md:col-span-2'; 
+            title.textContent = 'Checklist de Condição Física'; 
+            checklistContainer.appendChild(title); 
+
+            const grid = document.createElement('div'); 
+            grid.className = 'grid grid-cols-2 gap-x-4 gap-y-2'; 
+            
+            items.forEach(item => { 
+                const isChecked = savedChecklist[item] || false; 
+                const label = document.createElement('label'); 
+                label.className = 'flex items-center text-sm text-gray-700'; 
+                label.innerHTML = `<input type="checkbox" value="${item}" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2" ${isChecked ? 'checked' : ''}> ${item}`; 
+                grid.appendChild(label); 
+            }); 
+            checklistContainer.appendChild(grid); 
+        }
+
+        // --- Data Handling (CRUD) ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (IMGBB_API_KEY === "SUA_CHAVE_API_AQUI") { showMessage("Por favor, adicione sua chave de API do ImgBB no código.", "error"); return; }
+            saveButton.disabled = true;
+            saveButton.innerHTML = `<div class="spinner"></div>`;
+            const osIdInput = document.getElementById('os-id');
+            const isNewOs = !osIdInput.value;
+            try {
+                const captionsMap = getCaptionsFromDOM();
+                const uploadPromises = [];
+                newFilesToUpload.forEach(file => { uploadPromises.push(uploadImageToImgBB(file, captionsMap[file.name])); });
+                existingImages.filter(img => img.editedFile).forEach(img => { uploadPromises.push(uploadImageToImgBB(img.editedFile, captionsMap[img.url])); });
+                const uploadedImagesData = await Promise.all(uploadPromises);
+                const finalImages = [];
+                existingImages.forEach(img => { if (!img.editedFile) { img.caption = captionsMap[img.url] || img.caption; finalImages.push(img); } });
+                uploadedImagesData.forEach(data => finalImages.push(data));
+                const checklist = {};
+                checklistContainer.querySelectorAll('input[type="checkbox"]').forEach(c => { checklist[c.value] = c.checked; });
+                const osData = {
+                    clientName: document.getElementById('client-name').value, clientCpf: document.getElementById('client-cpf').value, clientContact: document.getElementById('client-contact').value, deviceType: document.getElementById('device-type').value, deviceBrand: document.getElementById('device-brand').value, equipmentSerialImei: document.getElementById('equipment-serial-imei').value, equipmentPassword: document.getElementById('equipment-password').value, accessoriesReceived: document.getElementById('accessories-received').value, reportedIssue: document.getElementById('reported-issue').value, techFindings: document.getElementById('tech-findings').value, techSolution: document.getElementById('tech-solution').value, budgetParts: document.getElementById('budget-parts').value, budgetLabor: document.getElementById('budget-labor').value, technician: document.getElementById('technician').value, status: document.getElementById('status').value, updatedAt: serverTimestamp(), checklist: checklist, 
+                    images: finalImages,
+                    digitalSignature: currentSignatureData // Add digital signature data
+                };
+                const osCollectionPath = `artifacts/${appId}/users/${userId}/service_orders`;
+                if (isNewOs) {
+                    osData.createdAt = serverTimestamp();
+                    osData.osNumber = Date.now();
+                    await addDoc(collection(db, osCollectionPath), osData);
+                    showMessage("OS criada com sucesso!", "success");
+                } else {
+                    await updateDoc(doc(db, osCollectionPath, osIdInput.value), osData);
+                    showMessage("OS atualizada com sucesso!", "success");
+                }
+                closeModal();
+            } catch (error) { console.error("Error saving data: ", error); showMessage("Erro ao salvar os dados.", "error"); } 
+            finally { saveButton.disabled = false; saveButton.textContent = 'Salvar'; }
+        }
+        function getCaptionsFromDOM() { const captions = {}; imagePreviewContainer.querySelectorAll('.image-preview-item').forEach(item => { const identifier = item.dataset.identifier; const caption = item.querySelector('.image-caption-input').value; captions[identifier] = caption; }); return captions; }
+        async function uploadImageToImgBB(file, caption) { const formData = new FormData(); formData.append('image', file); const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData }); const result = await response.json(); if (!result.success) throw new Error(result.error.message); return { url: result.data.url, caption: caption || '' }; }
+        
+        function handleDelete(osId) {
+            osToDeleteId = osId;
+            confirmModal.classList.remove('hidden');
+        }
+
+        async function executeDelete() {
+            if (!osToDeleteId) return;
+            try {
+                const osCollectionPath = `artifacts/${appId}/users/${userId}/service_orders`;
+                await deleteDoc(doc(db, osCollectionPath, osToDeleteId));
+                showMessage("OS excluída com sucesso.", "success");
+            } catch (error) {
+                console.error("Error deleting OS: ", error);
+                showMessage("Erro ao excluir a OS.", "error");
+            } finally {
+                osToDeleteId = null;
+                confirmModal.classList.add('hidden');
+            }
+        }
+
+        // --- Print Function ---
+        function printOs(os) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write('<html><head><title>Ordem de Serviço #' + os.osNumber + '</title>');
+            // Inclui os estilos de impressão CSS
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; color: #333; }
+                #print-area { padding: 20px; max-width: 800px; margin: 0 auto; }
+                .print-header { text-align: center; margin-bottom: 15px; }
+                .print-header h1 { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+                .print-header p { font-size: 12px; color: #555; }
+                .print-section-title { font-size: 15px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-top: 15px; margin-bottom: 8px; color: #444; }
+                .print-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+                .print-info-item p { font-size: 13px; line-height: 1.4; margin-bottom: 3px; }
+                .print-info-item strong { font-weight: 600; color: #333; }
+                .print-text-area { border: 1px solid #eee; padding: 8px; min-height: 40px; margin-top: 4px; background-color: #f9f9f9; white-space: pre-wrap; word-wrap: break-word; font-size: 13px; }
+                .print-checklist-item { font-size: 13px; margin-bottom: 2px; color: #555; }
+                .print-image-gallery { display: none; } /* Removido para impressão */
+                .print-total { font-size: 17px; font-weight: bold; text-align: right; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 8px; color: #222; }
+                .print-terms { margin-top: 25px; padding-top: 10px; }
+                .print-terms h4 { font-size: 13px; font-weight: bold; margin-top: 10px; margin-bottom: 4px; }
+                .print-terms p { font-size: 11px; line-height: 1.5; text-align: justify; margin-bottom: 8px; }
+                .print-signature-area { 
+                    margin-top: 60px; /* Mais espaço para a assinatura */
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    padding-top: 40px; /* Ajusta o padding para mais espaço */
+                }
+                .print-signature-line {
+                    border-bottom: 1px dashed #000;
+                    width: 75%; /* Ajustado para mais espaço */
+                    margin: 0 auto 5px auto;
+                    height: 1px;
+                }
+                .print-signature-text {
+                    font-size: 11px; /* Reduzido */
+                }
+                .print-digital-signature-img {
+                    max-width: 200px; /* Tamanho da imagem da assinatura digital */
+                    height: auto;
+                    margin-top: 10px;
+                    border: 1px solid #ccc;
+                }
+                .print-footer-message { text-align: center; margin-top: 20px; font-size: 9px; color: #777; }
+                /* Ocultar elementos não essenciais para impressão */
+                @media print {
+                    body * { visibility: hidden; }
+                    #print-area, #print-area * { visibility: visible; }
+                    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+                }
+            `);
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write('<div id="print-area">');
+
+            // Header and Company Info
+            const currentDateTime = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            printWindow.document.write(`
+                <div class="print-header">
+                    <p style="text-align: right; font-size: 10px; margin-bottom: 10px;">${currentDateTime}</p>
+                    <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">
+                        <span style="color: #22c55e;">WS</span><span style="color: #ef4444;">WR</span>
+                    </h1>
+                    <h1 style="color: #000; font-size: 24px; font-weight: bold;">Ordem de Serviço #${os.osNumber}</h1>
+                    <p style="font-size: 12px; margin-top: 10px;">${companyInfo.name}</p>
+                    <p style="font-size: 12px;">CPF/CNPJ: ${companyInfo.cnpj}</p>
+                    <p style="font-size: 12px;">${companyInfo.address}</p>
+                    <p style="font-size: 12px;">Contato: ${companyInfo.phone} | E-mail: ${companyInfo.email}</p>
+                    <p style="font-size: 12px; margin-top: 15px;">Data de Entrada: ${os.createdAt ? os.createdAt.toDate().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'N/A'}</p>
+                </div>
+            `);
+
+            // Informações do Cliente
+            printWindow.document.write('<div class="print-section-title">Informações do Cliente</div>');
+            printWindow.document.write('<div class="print-info-grid">');
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Nome:</strong> ${os.clientName || 'Não informado'}</p></div>`);
+            printWindow.document.write(`<div class="print-info-item"><p><strong>CPF:</strong> ${os.clientCpf || 'Não informado'}</p></div>`);
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Contato:</strong> ${os.clientContact || 'Não informado'}</p></div>`);
+            printWindow.document.write('</div>');
+
+            // Informações do Equipamento
+            printWindow.document.write('<div class="print-section-title">Informações do Equipamento</div>');
+            printWindow.document.write('<div class="print-info-grid">');
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Tipo:</strong> ${os.deviceType || 'Não informado'}</p></div>`);
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Marca/Modelo:</strong> ${os.deviceBrand || 'Não informado'}</p></div>`);
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Nº de Série/IMEI:</strong> ${os.equipmentSerialImei || 'Não informado'}</p></div>`);
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Senha/Padrão:</strong> ${os.equipmentPassword || 'Não informado'}</p></div>`);
+            printWindow.document.write('</div>');
+
+            // Checklist de Condição Física
+            if (os.checklist && Object.keys(os.checklist).length > 0) {
+                printWindow.document.write('<div class="print-section-title">Checklist de Condição Física</div>');
+                printWindow.document.write('<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">'); // Match PDF's two-column layout
+                for (const item in os.checklist) {
+                    const status = os.checklist[item] ? 'Sim' : 'Não';
+                    printWindow.document.write(`
+                        <div class="print-checklist-item">
+                            <span>${item}: ${status}</span>
+                        </div>
+                    `);
+                }
+                printWindow.document.write('</div>');
+            }
+
+            // Acessórios
+            printWindow.document.write('<div class="print-section-title">Acessórios</div>');
+            printWindow.document.write(`<div class="print-text-area">${os.accessoriesReceived || 'Não informado.'}</div>`);
+
+            // Defeito Reclamado
+            printWindow.document.write('<div class="print-section-title">Defeito Reclamado</div>');
+            printWindow.document.write(`<div class="print-text-area">${os.reportedIssue || 'Não informado.'}</div>`);
+
+            // Laudo Técnico
+            printWindow.document.write('<div class="print-section-title">Laudo Técnico</div>');
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Constatações Técnicas:</strong></p></div>`);
+            printWindow.document.write(`<div class="print-text-area">${os.techFindings || 'Aguardando análise.'}</div>`);
+            printWindow.document.write(`<div class="print-info-item" style="margin-top: 10px;"><p><strong>Solução Recomendada:</strong></p></div>`);
+            printWindow.document.write(`<div class="print-text-area">${os.techSolution || 'Aguardando análise.'}</div>`);
+
+
+            // Orçamento
+            const budgetParts = parseFloat(os.budgetParts) || 0;
+            const budgetLabor = parseFloat(os.budgetLabor) || 0;
+            const total = budgetParts + budgetLabor;
+            const laborPercentage = budgetParts > 0 ? (budgetLabor / budgetParts) * 100 : 0;
+
+            printWindow.document.write('<div class="print-section-title">Orçamento</div>');
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Valor das Peças:</strong> R$ ${budgetParts.toFixed(2).replace('.', ',')}</p></div>`);
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Valor do Serviço:</strong> R$ ${budgetLabor.toFixed(2).replace('.', ',')}</p></div>`);
+            printWindow.document.write(`<div class="print-info-item"><p><strong>Mão de Obra % sobre Peças:</strong> ${laborPercentage.toFixed(2).replace('.', ',')}%</p></div>`); // Added percentage
+            printWindow.document.write(`<div class="print-total">Valor Total: R$ ${total.toFixed(2).replace('.', ',')}</div>`);
+
+            // Images section removed as requested
+            // printWindow.document.write('<div class="print-section-title">Imagens do Equipamento</div>');
+            // if (os.images && os.images.length > 0) {
+            //     printWindow.document.write('<div class="print-image-gallery">');
+            //     os.images.forEach(image => {
+            //         printWindow.document.write(`<img src="${image.url}" alt="${image.caption || 'Imagem do equipamento'}" title="${image.caption || ''}">`);
+            //     });
+            //     printWindow.document.write('</div>');
+            // } else {
+            //     printWindow.document.write('<div class="print-text-area">Nenhuma imagem anexada.</div>');
+            // }
+
+            // Termos e Condições do Serviço
+            printWindow.document.write('<div class="print-section-title print-terms">Termos e Condições do Serviço</div>');
+            
+            printWindow.document.write(`
+                <h4>1. TERMO DE GARANTIA:</h4>
+                <p>Todos os serviços prestados e peças substituídas possuem a garantia legal de 90 (noventa) dias, a contar da data de retirada do equipamento, conforme Art. 26, II, do Código de Defesa do Consumidor (Lei 8.078/90). A garantia cobre exclusivamente o defeito originalmente reparado e as peças diretamente envolvidas no serviço. Exclusões: A garantia não cobre: (a) novos defeitos não relacionados ao serviço original; (b) danos causados por mau uso, impacto (queda), contato com líquidos, ou descarga elétrica; (c) problemas de software, vírus ou incompatibilidade de aplicativos; (d) danos resultantes de intervenção técnica por terceiros ou pelo próprio cliente após nosso reparo.</p>
+            `);
+
+            printWindow.document.write(`
+                <h4>2. POLÍTICA DE PRIVACIDADE E DADOS (LGPD):</h4>
+                <p>O CLIENTE declara ser o único responsável por realizar o backup (cópia de segurança) de todos os dados, arquivos e informações contidas em seu equipamento antes de entregá-lo para reparo. A EMPRESA não se responsabiliza por qualquer perda de dados que possa ocorrer como consequência necessária do processo de diagnóstico ou reparo. Consentimento para Acesso: Pela presente, o CLIENTE, titular dos dados, autoriza a EMPRESA a acessar os dados pessoais e informações contidas no equipamento descrito nesta OS, para a finalidade única e exclusiva de realizar o diagnóstico técnico e o reparo solicitado, em conformidade com a Lei nº 13.709/2018 (LGPD).</p>
+            `);
+
+            printWindow.document.write(`
+                <h4>3. CONDIÇÕES DE PAGAMENTO:</h4>
+                <p>O pagamento integral do serviço deverá ser efetuado no ato da retirada do equipamento. Aceitamos os seguintes métodos de pagamento: Pix, Cartão de Crédito/Débito e Dinheiro. Para serviços que exijam a encomenda de peças com custo superior a R$ 200,00, um sinal de 50% do valor do orçamento será solicitado no ato da aprovação para confirmar o pedido.</p>
+            `);
+
+            printWindow.document.write(`
+                <h4>4. POLÍTICA DE ABANDONO DE EQUIPAMENTO:</h4>
+                <p>O cliente será notificado via Telefone/WhatsApp e E-mail assim que o serviço for concluído. O cliente terá um prazo de 90 (noventa) dias corridos, a contar da primeira notificação de conclusão, para retirar o equipamento e efetuar o pagamento devido. Após este prazo, poderá ser cobrada uma taxa de armazenamento diária de R$ 2,00 (dois reais). Decorrido o prazo total de 180 (cento e oitenta) dias da notificação sem a retirada do equipamento, este será considerado abandonado, nos termos do Art. 1.275, III, do Código Civil. A empresa fica, a partir de então, autorizada a dispor do bem (através de venda, doação ou descarte) para ressarcimento dos custos do serviço e armazenamento, sem que caiba ao cliente qualquer direito a indenização ou restituição.</p>
+            `);
+            
+            // Assinatura do Cliente
+            printWindow.document.write(`
+                <div class="print-signature-area">
+                    ${os.digitalSignature ? `<img src="${os.digitalSignature}" class="print-digital-signature-img" alt="Assinatura Digital do Cliente">` : '<div class="print-signature-line"></div>'}
+                    <p class="print-signature-text">Assinatura do Cliente</p>
+                    <p class="print-signature-text">(${os.clientName || ''})</p>
+                </div>
+            `);
+
+            // Footer Message
+            printWindow.document.write(`
+                <div class="print-footer-message">
+                    <p>Documento gerado pelo sistema WSWR - Ordem de Serviço.</p>
+                    <p>Este documento não possui validade fiscal.</p>
+                </div>
+            `);
+
+            printWindow.document.write('</div></body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        }
+        function showMessage(message, type = "success") { const messageBox = document.getElementById('message-box'); const messageText = document.getElementById('message-text'); messageText.textContent = message; messageBox.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl transition-transform transform translate-y-20 z-[95]`; messageBox.classList.add(type === "error" ? 'bg-red-500' : 'bg-green-500'); messageBox.classList.remove('hidden'); setTimeout(() => messageBox.classList.remove('translate-y-20'), 10); setTimeout(() => { messageBox.classList.add('translate-y-20'); setTimeout(() => messageBox.classList.add('hidden'), 300); }, 4000); }
+        
+        // --- Event Listeners ---
+        loginForm.addEventListener('submit', handleLogin);
+        logoutButton.addEventListener('click', handleLogout);
+        addOsButton.addEventListener('click', () => openModal());
+        closeModalButton.addEventListener('click', closeModal);
+        cancelButton.addEventListener('click', closeModal);
+        osForm.addEventListener('submit', handleFormSubmit);
+        searchInput.addEventListener('input', (e) => renderOsList(e.target.value));
+        deviceTypeSelect.addEventListener('change', (e) => generateChecklist(e.target.value));
+        imageUploadInput.addEventListener('change', handleFileSelect);
+        [budgetPartsInput, budgetLaborInput].forEach(input => input.addEventListener('input', updateTotalBudget));
+        osListContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('[data-id]');
+            if (!card) return;
+            const osId = card.dataset.id;
+            if (e.target.classList.contains('edit-btn')) {
+                const os = serviceOrders.find(o => o.id === osId);
+                openModal(os);
+            }
+            if (e.target.classList.contains('delete-btn')) {
+                handleDelete(osId);
+            }
+            if (e.target.classList.contains('print-btn')) {
+                const os = serviceOrders.find(o => o.id === osId);
+                printOs(os);
+            }
+        });
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        editorCancelButton.addEventListener('click', closeImageEditor);
+        imageEditorModal.addEventListener('click', (e) => { if(e.target === imageEditorModal) closeImageEditor(); });
+        confirmOkButton.addEventListener('click', executeDelete);
+        confirmCancelButton.addEventListener('click', () => {
+            osToDeleteId = null;
+            confirmModal.classList.add('hidden');
+        });
+
+        // Digital Signature Event Listeners
+        addSignatureButton.addEventListener('click', () => openSignatureModal(currentSignatureData));
+        closeSignatureModalButton.addEventListener('click', closeSignatureModal);
+        clearSignatureButton.addEventListener('click', clearSignature);
+        saveSignatureButton.addEventListener('click', saveDigitalSignature);
+
+        signaturePadCanvas.addEventListener('mousedown', startDrawing);
+        signaturePadCanvas.addEventListener('mousemove', draw);
+        signaturePadCanvas.addEventListener('mouseup', stopDrawing);
+        signaturePadCanvas.addEventListener('mouseout', stopDrawing); // Stop drawing if mouse leaves canvas
+
+        signaturePadCanvas.addEventListener('touchstart', startDrawing);
+        signaturePadCanvas.addEventListener('touchmove', draw);
+        signaturePadCanvas.addEventListener('touchend', stopDrawing);
+        signaturePadCanvas.addEventListener('touchcancel', stopDrawing);
+
+        // --- Dashboard Functions ---
+        function populateMonthYearSelectors() {
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth(); // 0-indexed
+
+            // Populate years (e.g., current year and 5 previous years)
+            yearSelect.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                const year = currentYear - i;
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+
+            // Set current month and year as default
+            monthSelect.value = currentMonth;
+            yearSelect.value = currentYear;
+
+            // Add event listeners to update dashboard on change
+            monthSelect.addEventListener('change', renderDashboard);
+            yearSelect.addEventListener('change', renderDashboard);
+        }
+
+        function renderDashboard() {
+            const selectedMonth = parseInt(monthSelect.value);
+            const selectedYear = parseInt(yearSelect.value);
+
+            const technicians = ['Weslley', 'Werlley'];
+            const technicianData = {};
+            let overallTotalParts = 0;
+            let overallTotalLabor = 0;
+            let overallTotalRevenue = 0;
+            let overallTotalProfit = 0;
+            let overallTotalOsCompleted = 0;
+
+            // Initialize data for each technician
+            technicians.forEach(tech => {
+                technicianData[tech] = { parts: 0, labor: 0, revenue: 0, profit: 0, osCompleted: 0 };
+            });
+
+            // Filter and aggregate data from service orders
+            const filteredOrders = serviceOrders.filter(os => {
+                if (!os.createdAt) return false;
+                const osDate = os.createdAt.toDate();
+                return osDate.getMonth() === selectedMonth && osDate.getFullYear() === selectedYear;
+            });
+
+            filteredOrders.forEach(os => {
+                const tech = os.technician;
+                const parts = parseFloat(os.budgetParts) || 0;
+                const labor = parseFloat(os.budgetLabor) || 0;
+                const revenue = parts + labor;
+                const profit = labor; // Assuming profit is just labor for simplicity
+
+                if (technicianData[tech]) {
+                    technicianData[tech].parts += parts;
+                    technicianData[tech].labor += labor;
+                    technicianData[tech].revenue += revenue;
+                    technicianData[tech].profit += profit;
+                    technicianData[tech].osCompleted += 1;
+                }
+
+                overallTotalParts += parts;
+                overallTotalLabor += labor;
+                overallTotalRevenue += revenue;
+                overallTotalProfit += profit;
+                overallTotalOsCompleted += 1;
+            });
+
+            // Update summary display
+            totalPartsCostDisplay.textContent = `R$ ${overallTotalParts.toFixed(2).replace('.', ',')}`;
+            totalLaborCostDisplay.textContent = `R$ ${overallTotalLabor.toFixed(2).replace('.', ',')}`;
+            totalRevenueDisplay.textContent = `R$ ${overallTotalRevenue.toFixed(2).replace('.', ',')}`;
+            totalProfitDisplay.textContent = `R$ ${overallTotalProfit.toFixed(2).replace('.', ',')}`;
+            totalOsCompletedDisplay.textContent = overallTotalOsCompleted;
+
+            // Update OS completed by technician display
+            technicianOsCountsDisplay.innerHTML = '';
+            technicians.forEach(tech => {
+                const techDiv = document.createElement('div');
+                techDiv.className = 'bg-gray-50 p-3 rounded-lg shadow-sm';
+                techDiv.innerHTML = `
+                    <p class="text-sm font-medium text-gray-700">${tech}</p>
+                    <p class="text-xl font-bold text-gray-900">${technicianData[tech].osCompleted} OS</p>
+                `;
+                technicianOsCountsDisplay.appendChild(techDiv);
+            });
+
+
+            // Prepare data for Chart.js
+            const labels = technicians;
+            const partsData = technicians.map(tech => technicianData[tech].parts);
+            const laborData = technicians.map(tech => technicianData[tech].labor);
+            const profitData = technicians.map(tech => technicianData[tech].profit);
+            const revenueData = technicians.map(tech => technicianData[tech].revenue);
+
+            // Destroy existing chart instance if it exists
+            if (financialChartInstance) {
+                financialChartInstance.destroy();
+            }
+
+            // Create new chart
+            financialChartInstance = new Chart(financialChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Custo de Peças (R$)',
+                            data: partsData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)', // Tailwind blue-500
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Custo de Mão de Obra (R$)',
+                            data: laborData,
+                            backgroundColor: 'rgba(168, 85, 247, 0.6)', // Tailwind purple-500
+                            borderColor: 'rgba(168, 85, 247, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Receita Total (R$)',
+                            data: revenueData,
+                            backgroundColor: 'rgba(34, 197, 94, 0.6)', // Tailwind green-500
+                            borderColor: 'rgba(34, 197, 94, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Lucro Estimado (R$)',
+                            data: profitData,
+                            backgroundColor: 'rgba(234, 179, 8, 0.6)', // Tailwind yellow-500
+                            borderColor: 'rgba(234, 179, 8, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true, 
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Desempenho Financeiro por Técnico',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Valor (R$)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Dashboard Event Listeners ---
+        viewDashboardButton.addEventListener('click', () => {
+            dashboardModal.classList.remove('hidden');
+            renderDashboard(); // Ensure dashboard is rendered when opened
+        });
+        closeDashboardModalButton.addEventListener('click', () => {
+            dashboardModal.classList.add('hidden');
+        });
+
+
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>
